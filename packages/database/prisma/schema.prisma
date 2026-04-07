@@ -1,0 +1,204 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  name      String
+  role      AdminRole @default(ADMIN)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("admins")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+model FoodCourt {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  address   String?
+  location  String?
+  imageUrl  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tables    Table[]
+  merchants Merchant[]
+  orders    Order[]
+
+  @@map("food_courts")
+}
+
+model Table {
+  id          String   @id @default(cuid())
+  number      Int
+  qrCodeUrl   String?
+  isActive    Boolean  @default(true)
+  foodCourtId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  foodCourt FoodCourt @relation(fields: [foodCourtId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@unique([foodCourtId, number])
+  @@map("tables")
+}
+
+model Merchant {
+  id               String  @id @default(cuid())
+  email            String  @unique
+  password         String
+  storeName        String
+  ownerName        String
+  phone            String?
+  description      String?
+  logoUrl          String?
+  isActive         Boolean @default(false)
+  isApproved       Boolean @default(false)
+  foodCourtId      String
+  bankName         String?
+  bankAccountName  String?
+  bankAccountNumber String?
+  balance          Decimal @default(0) @db.Decimal(12, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  foodCourt  FoodCourt         @relation(fields: [foodCourtId], references: [id], onDelete: Cascade)
+  categories Category[]
+  menuItems  MenuItem[]
+  orders     Order[]
+  payments   MerchantPayment[]
+
+  @@map("merchants")
+}
+
+model Category {
+  id         String   @id @default(cuid())
+  name       String
+  imageUrl   String?
+  merchantId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  merchant  Merchant   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?
+  isAvailable Boolean  @default(true)
+  prepTime    Int?
+  categoryId  String
+  merchantId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  merchant   Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("menu_items")
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique
+  status        OrderStatus   @default(PENDING)
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(CASH)
+  paymentStatus PaymentStatus @default(PENDING)
+  customerNote  String?
+  customerPhone String
+  tableId       String
+  foodCourtId   String
+  merchantId    String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  table      FoodCourt  @relation(fields: [foodCourtId], references: [id])
+  orderTable Table      @relation(fields: [tableId], references: [id])
+  merchant   Merchant   @relation(fields: [merchantId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                  String  @id @default(cuid())
+  quantity            Int
+  unitPrice           Decimal @db.Decimal(10, 2)
+  totalPrice          Decimal @db.Decimal(10, 2)
+  specialInstructions String?
+  orderId             String
+  menuItemId          String
+  createdAt           DateTime @default(now())
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
+model MerchantPayment {
+  id              String           @id @default(cuid())
+  amount          Decimal          @db.Decimal(12, 2)
+  status          PaymentPayStatus @default(PENDING)
+  referenceNumber String?
+  notes           String?
+  merchantId      String
+  periodStart     DateTime
+  periodEnd       DateTime
+  paidAt          DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@map("merchant_payments")
+}
+
+enum PaymentPayStatus {
+  PENDING
+  APPROVED
+  PAID
+  REJECTED
+}

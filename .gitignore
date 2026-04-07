@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+.output/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Prisma
+packages/database/prisma/*.db
+packages/database/prisma/*.db-journal
+
+# Flutter
+apps/merchant/.dart_tool/
+apps/merchant/.packages
+apps/merchant/.pub-cache/
+apps/merchant/.pub/
+apps/merchant/build/
+apps/merchant/.flutter-plugins
+apps/merchant/.flutter-plugins-dependencies
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+
+# Uploads
+uploads/
