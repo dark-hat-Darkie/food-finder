@@ -9,7 +9,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3002',
+      'https://food-finder-admin.vercel.app',
+    ],
     credentials: true,
   })
 
