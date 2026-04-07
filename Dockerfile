@@ -49,6 +49,9 @@ RUN npx prisma@6 generate --schema=./packages/database/prisma/schema.prisma
 # Copy built API from builder
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
+# Create uploads directory writable by node user
+RUN mkdir -p ./uploads && chown node:node ./uploads
+
 USER node
 EXPOSE 3001
 CMD ["node", "apps/api/dist/main"]
